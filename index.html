@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="it" data-theme="light">
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -553,28 +555,30 @@
     let users = loadUsers();
     let settings = loadSettings();
     let selectedUserId = null;
-          function loadUsers() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : defaultUsers;
-      } catch (err) {
-        return defaultUsers;
-      }
+      const firebaseConfig
+function loadUsers(callback) {
+  db.child('users').once('value').then(snapshot => {
+    users = snapshot.val() || defaultUsers;
+    renderUsersList();
+    if (callback) callback();
+  }).catch(err => {
+    console.error('Errore load:', err);
+    users = defaultUsers;
+    renderUsersList();
+    if (callback) callback();
+  });
+}
     }
 
-    function loadSettings() {
-      try {
-        const raw = localStorage.getItem(SETTINGS_KEY);
-        return raw ? JSON.parse(raw) : defaultSettings;
-      } catch (err) {
-        return defaultSettings;
-      }
+   function loadSettings(callback) {
+  db.child('settings').once('value').then(snapshot => {
+    settings
     }
 
-    function persist() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    }
+  function persist() {
+  db.child('users').set(users);
+  db.child('settings').set(settings);
+}
 
     function normalizePhone(value) {
       return (value || '').replace(/\D/g, '');
@@ -856,8 +860,8 @@
 })();
 
     // Inizializzazione iniziale
-    clearEditor();
-    persist();
+   loadUsers();
+loadSettings();
   </script>
 </body>
 </html>
